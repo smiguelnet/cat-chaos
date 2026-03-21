@@ -107,8 +107,9 @@ Requests happen only during `EVENING`.
 
 ### Request Effects
 
-- `FOOD` completed: `fullness += 20`
-- `ATTENTION` completed: `happiness += 20`
+- Completing a request does not grant any extra stat bonus beyond the triggering player action
+- `FOOD` completed: set `active_request = null` and avoid the failure penalty
+- `ATTENTION` completed: set `active_request = null` and avoid the failure penalty
 - Any ignored request:
   - `happiness -= 10`
   - `calmness -= 10`
@@ -117,8 +118,8 @@ Requests happen only during `EVENING`.
 
 | Action | Availability | Effect |
 | --- | --- | --- |
-| `Feed` | `DAY`, `EVENING` | `fullness += 20`; if the active request is `FOOD`, complete it |
-| `Pet` | `DAY`, `EVENING` | `happiness += 20`; if the active request is `ATTENTION`, complete it |
+| `Feed` | `DAY`, `EVENING` | `fullness += 20`; if the active request is `FOOD`, complete it with no additional stat reward |
+| `Pet` | `DAY`, `EVENING` | `happiness += 20`; if the active request is `ATTENTION`, complete it with no additional stat reward |
 
 There is no explicit `Ignore` button. A request is considered ignored when its timer expires unresolved.
 
@@ -131,7 +132,7 @@ There is no explicit `Ignore` button. A request is considered ignored when its t
 ### On Enter Day
 
 - Set `phase_time_remaining = 10`
-- Clear `active_request`
+- Set `active_request = null`
 - Increment `cycle_index` by `1`
 
 ### On Enter Evening
@@ -142,7 +143,7 @@ There is no explicit `Ignore` button. A request is considered ignored when its t
 ### On Enter Night
 
 - Set `phase_time_remaining = 5`
-- Clear `active_request`
+- Set `active_request = null`
 - Evaluate sleep outcome once
 
 ## 10. Sleep Evaluation
@@ -194,6 +195,7 @@ The game should emit these events:
 - Given one `EVENING` phase, exactly `3` requests are generated
 - Given an active `FOOD` request, `Feed` completes it on the same tick
 - Given an active `ATTENTION` request, `Pet` completes it on the same tick
+- Given an active matching request, the triggering action applies its normal stat gain exactly once
 - Given a request expires, `happiness` and `calmness` are both reduced by `10`
 
 ### Stat Bounds

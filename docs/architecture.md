@@ -132,7 +132,7 @@ var phase_time_remaining: int
 var fullness: int
 var happiness: int
 var calmness: int
-var active_request: Dictionary # { type: StringName, time_remaining: int } or {}
+var active_request # null or { type: StringName, time_remaining: int }
 var cycle_index: int
 var rng_state: int
 ```
@@ -160,6 +160,7 @@ This keeps deterministic behavior and prevents UI or animation code from becomin
 - apply passive stat decay / recovery
 - manage phase transitions
 - create and resolve requests
+- apply action rewards exactly once for matched requests
 - evaluate sleep outcome
 - emit state and domain signals
 
@@ -252,6 +253,7 @@ Rules:
 - no frame-rate dependent gameplay logic
 - no state mutation in `_process()`
 - all gameplay outcomes must be reproducible from initial seed + input sequence
+- when an action matches the active request, the action's normal stat gain is the only stat reward; request completion adds no extra bonus
 
 ## 8. Data & Configuration
 

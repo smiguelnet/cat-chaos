@@ -31,12 +31,12 @@ The documentation forms a contract system. When implementing:
    - Pre-release validation checklist
    - Known open issues to resolve before release
 
-## Known Open Issues
+## Resolved Gameplay Decisions
 
-Before implementing or merging gameplay logic:
+These decisions are now fixed across the docs:
 
-- **active_request representation**: Spec uses `null`, architecture uses `{}` (empty Dictionary). One canonical representation must be chosen.
-- **Matched-request rewards**: Confirm whether matching a request applies both the action reward and request-completion reward (e.g., does Feed on FOOD give +40 fullness or +20?).
+- **active_request representation**: use `null` when no request is active.
+- **Matched-request rewards**: matching a request applies the triggering action's normal stat gain exactly once. Request completion adds no extra stat bonus.
 
 ## Architecture Constraints
 

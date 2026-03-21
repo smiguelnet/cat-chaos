@@ -88,10 +88,10 @@ Current status:
 - automated gameplay tests do not yet exist
 - release verification cannot be completed yet
 
-Known open cross-doc issues tracked in the release checklist:
+Resolved cross-doc decisions now reflected in the specs:
 
-- `active_request` is `null` in the spec and `{}` in the architecture; one canonical representation still needs to be chosen
-- matched-request rewards need confirmation so the implementation applies the intended reward exactly once
+- `active_request` is canonically `null` when no request is active
+- matched requests apply the triggering action's normal stat gain exactly once, with no extra completion bonus
 
 ## Documentation
 

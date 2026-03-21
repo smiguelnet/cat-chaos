@@ -67,21 +67,13 @@ Deterministic tick order from `docs/spec.md` must stay fixed:
 
 If implementation changes this order, update the spec and tests in the same change.
 
-## Known Open Decisions
+## Resolved Decisions
 
-These are intentionally unresolved in the docs and must not be handled casually:
+These gameplay decisions are already fixed in the project docs:
 
-- `active_request` is `null` in the spec and `{}` / empty `Dictionary` in the architecture.
-- Matched-request rewards are ambiguous: the current wording can imply double reward on matching actions.
-
-If work requires resolving either issue:
-
-- choose one canonical behavior
-- update `docs/spec.md`, `docs/architecture.md`, and `docs/release-checklist.md` together
-- add or update tests so the behavior is locked
-- mention the decision clearly in the change summary
-
-Do not silently implement one interpretation while leaving the docs inconsistent.
+- `active_request` is canonically `null` when no request is active.
+- Matching a request applies the triggering action's normal stat gain exactly once.
+- Request completion adds no extra stat reward beyond the triggering action and simply avoids the failure penalty.
 
 ## Expected Architecture
 

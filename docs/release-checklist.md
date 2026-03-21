@@ -16,9 +16,9 @@
 
 - Current repository contents are documentation only: `docs/spec.md`, `docs/architecture.md`, and this checklist.
 - The game implementation is not present, so the game cannot be verified as correct yet.
-- The spec and architecture are broadly aligned, but there are open correctness / consistency issues to resolve before release:
-  - `active_request` is `null` in the spec and `{}` / empty `Dictionary` in the architecture. Pick one canonical representation and use it consistently.
-  - Matching a request appears to apply both the action reward and the request-completion reward. As written, `Feed` on `FOOD` gives `+40 fullness` and `Pet` on `ATTENTION` gives `+40 happiness`. Confirm whether that double reward is intended.
+- The previous spec/architecture consistency issues have been resolved in the docs:
+  - `active_request` is canonically `null` when no request is active.
+  - Matching a request applies the triggering action's normal stat gain exactly once and adds no extra completion bonus.
 
 ## 2. Pre-release Validation
 
@@ -45,7 +45,7 @@
   - `fullness = 80`
   - `happiness = 80`
   - `calmness = 60`
-  - `active_request = null` or the agreed canonical empty value
+  - `active_request = null`
   - `cycle_index = 1`
   - seeded `rng_state`
 - [ ] Tick rate is exactly `1 update per second`.
@@ -73,16 +73,17 @@
 - [ ] `Feed` completes an active `FOOD` request on the same tick.
 - [ ] `Pet` completes an active `ATTENTION` request on the same tick.
 - [ ] When a request expires unresolved, `happiness -= 10` and `calmness -= 10`.
-- [ ] The implementation applies the intended reward exactly once for matched requests.
+- [ ] When a request is matched, the triggering action applies its normal stat gain exactly once.
+- [ ] Request completion adds no extra stat reward beyond the triggering action.
 
 ### Phase Transition Checks
 
 - [ ] `DAY -> EVENING` when `phase_time_remaining` reaches `0`.
 - [ ] `EVENING -> NIGHT` when `phase_time_remaining` reaches `0`.
 - [ ] `NIGHT -> DAY` when `phase_time_remaining` reaches `0`.
-- [ ] Entering `DAY` resets `phase_time_remaining` to `10`, clears the request, and increments `cycle_index`.
+- [ ] Entering `DAY` resets `phase_time_remaining` to `10`, sets `active_request = null`, and increments `cycle_index`.
 - [ ] Entering `EVENING` resets `phase_time_remaining` to `15` and starts the first request window immediately.
-- [ ] Entering `NIGHT` resets `phase_time_remaining` to `5`, clears the request, and evaluates sleep once.
+- [ ] Entering `NIGHT` resets `phase_time_remaining` to `5`, sets `active_request = null`, and evaluates sleep once.
 
 ### Sleep Evaluation Checks
 
