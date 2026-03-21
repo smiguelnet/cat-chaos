@@ -1,313 +1,248 @@
-# SPEC.md
+# Cat Chaos Specification
 
-## 🐱 Game Title
+## 1. Goal
 
-Cat & Human: Night Peace
+Cat Chaos is a small 2D pet-care game. The player manages one cat through a repeating day cycle and tries to reach night with the cat fed, happy, and calm enough for a peaceful sleep.
 
----
+The MVP should favor deterministic rules and readable feedback over content depth.
 
-## 1. 🎯 Purpose
+## 2. Core Loop
 
-A simple 2D simulation game designed to encourage responsible pet care through short, engaging gameplay loops.
+The game repeats this fixed loop:
 
-The player controls a human character responsible for meeting a cat’s needs. Proper care during the day and evening determines whether the player can sleep peacefully at night.
+`DAY (10s) -> EVENING (15s) -> NIGHT (5s) -> repeat`
 
----
+- `DAY`: passive recovery phase
+- `EVENING`: request / reaction phase
+- `NIGHT`: result phase with no player input
 
-## 2. 🧩 Core Concept
+## 3. Design Pillars
 
-The game is built around a repeating **time-cycle loop**:
+- Easy to understand in the first minute
+- Fully deterministic except for seedable request generation
+- Small enough to implement quickly in Godot
+- Clear cause and effect between player actions and sleep outcome
 
-- Day → Evening → Night → Repeat
+## 4. Single Source of Truth
 
-Player actions during **Day** and **Evening** directly affect the outcome of the **Night phase**.
+```ts
+type Phase = "DAY" | "EVENING" | "NIGHT";
+type RequestType = "FOOD" | "ATTENTION";
 
----
+type ActiveRequest =
+  | null
+  | {
+      type: RequestType;
+      time_remaining: number; // seconds, integer
+    };
 
-## 3. 👤 Characters
+type GameState = {
+  phase: Phase;
+  phase_time_remaining: number; // seconds, integer
+  fullness: number; // 0-100, higher is better
+  happiness: number; // 0-100, higher is better
+  calmness: number; // 0-100, higher is better
+  active_request: ActiveRequest;
+  cycle_index: number;
+  rng_state: number;
+};
+```
 
-### 3.1 Owner (Player)
+### Initial State
 
-- Human character
-- Selectable: Boy / Girl
-- Role: Respond to pet needs
+```ts
+{
+  phase: "DAY",
+  phase_time_remaining: 10,
+  fullness: 80,
+  happiness: 80,
+  calmness: 60,
+  active_request: null,
+  cycle_index: 1,
+  rng_state: <seeded value>
+}
+```
 
-### 3.2 Pet (Cat)
+## 5. Time and Tick Rules
 
-- Autonomous behavior
-- Nocturnal tendencies
-- Generates needs:
-  - Hunger
-  - Attention
-  - Sleep
+- Tick rate: `1 update per second`
+- All game logic runs on the tick
+- All numeric stats are clamped to `0..100`
+- Player actions are accepted only during `DAY` and `EVENING`
+- `NIGHT` is read-only
 
----
+## 6. Passive Stat Rules
 
-## 4. ⚙️ Core Systems
+Passive rules apply once per tick during `DAY` and `EVENING`.
 
-### 4.1 Pet Stats
+- `fullness -= 1`
+- `happiness -= 1`
+- During `DAY` only: `calmness += 2`
 
-| Stat      | Range | Description        |
-| --------- | ----- | ------------------ |
-| Hunger    | 0–100 | Need for food      |
-| Happiness | 0–100 | Need for attention |
-| Energy    | 0–100 | Rest level         |
+No passive stat changes happen during `NIGHT`.
 
----
+## 7. Request System
 
-### 4.2 Time System
+Requests happen only during `EVENING`.
 
-The game progresses in discrete phases:
+### Evening Structure
 
-1. **Day**
-   - Cat sleeps
-   - Energy increases
-   - Player should not disturb
+- `EVENING` lasts `15` seconds
+- It is split into `3` request windows of `5` seconds each
+- Each window creates exactly `1` request
+- Only `1` request may be active at a time
 
-2. **Evening**
-   - Cat is active
-   - Requests needs (food, attention)
+### Request Generation
 
-3. **Night**
-   - Outcome phase
-   - Determines sleep quality
+- A request is generated at the start of each 5-second window
+- Request type is chosen by seedable RNG from:
+  - `FOOD`
+  - `ATTENTION`
+- The request timer starts at `5`
 
----
+### Request Resolution
 
-### 4.3 Needs System
+- If the player satisfies the matching request before the timer reaches `0`, the request is completed immediately
+- If the timer reaches `0`, the request is ignored / failed
 
-During Evening, the cat generates requests:
+### Request Effects
 
-- Food
-- Attention
+- `FOOD` completed: `fullness += 20`
+- `ATTENTION` completed: `happiness += 20`
+- Any ignored request:
+  - `happiness -= 10`
+  - `calmness -= 10`
 
-Each request:
+## 8. Player Actions
 
-- Has a time window
-- Requires player action
+| Action | Availability | Effect |
+| --- | --- | --- |
+| `Feed` | `DAY`, `EVENING` | `fullness += 20`; if the active request is `FOOD`, complete it |
+| `Pet` | `DAY`, `EVENING` | `happiness += 20`; if the active request is `ATTENTION`, complete it |
 
----
+There is no explicit `Ignore` button. A request is considered ignored when its timer expires unresolved.
 
-### 4.4 Player Actions
+## 9. Phase Transitions
 
-| Action     | Effect                       |
-| ---------- | ---------------------------- |
-| Feed       | +Hunger                      |
-| Pet        | +Happiness                   |
-| Do Nothing | No effect / negative outcome |
+- `DAY -> EVENING` when `phase_time_remaining` reaches `0`
+- `EVENING -> NIGHT` when `phase_time_remaining` reaches `0`
+- `NIGHT -> DAY` when `phase_time_remaining` reaches `0`
 
----
+### On Enter Day
 
-### 4.5 Sleep Evaluation
+- Set `phase_time_remaining = 10`
+- Clear `active_request`
+- Increment `cycle_index` by `1`
 
-At Night phase:
-IF Hunger > 70 AND Happiness > 70 AND Energy > 70:
-Result = Good Sleep
-ELSE:
-Result = Disturbed Sleep
+### On Enter Evening
 
----
+- Set `phase_time_remaining = 15`
+- Start the first request window immediately
 
-## 5. 🔁 Gameplay Loop
+### On Enter Night
 
-1. Start Day
-2. Cat sleeps → gains energy
-3. Transition to Evening
-4. Cat requests needs
-5. Player responds (or not)
-6. Transition to Night
-7. Evaluate outcome
-8. Repeat cycle
+- Set `phase_time_remaining = 5`
+- Clear `active_request`
+- Evaluate sleep outcome once
 
----
+## 10. Sleep Evaluation
 
-## 6. 🏠 Environment
+Sleep is evaluated exactly once when `NIGHT` begins.
 
-### MVP Scope
+### Outcome Rule
 
-- Single room (Living Room)
+- `Good Sleep` if:
+  - `fullness >= 70`
+  - `happiness >= 70`
+  - `calmness >= 70`
+- Otherwise: `Disturbed Sleep`
 
-### Future Expansion
+This rule replaces the previous average-score approach because the stricter threshold is easier to understand and matches the intended acceptance criteria.
 
-- Kitchen (feeding)
-- Bedroom (sleep)
-- Bathroom (optional interactions)
+## 11. Deterministic Update Order
 
----
+For each tick, process logic in this order:
 
-## 7. 🎮 Interaction Model
+1. Apply player input for the current tick
+2. Apply passive stat rules for the current phase
+3. Update the active request timer and resolve completion / timeout
+4. Decrement `phase_time_remaining`
+5. Perform phase transition if the timer reached `0`
+6. If a new evening request window starts, spawn the next request
 
-### Input
+This ordering must remain fixed so tests and gameplay stay deterministic.
 
-- Mouse / Touch
+## 12. Events
 
-### UI Elements
+The game should emit these events:
 
-- Buttons:
-  - Feed
-  - Pet
-- Stat bars:
-  - Hunger
-  - Happiness
-  - Energy
+- `OnPhaseChanged(from_phase, to_phase)`
+- `OnRequestGenerated(request_type)`
+- `OnRequestCompleted(request_type)`
+- `OnRequestFailed(request_type)`
+- `OnSleepEvaluated(result)`
 
----
+## 13. Acceptance Tests
 
-## 8. 🧠 Game Logic
+### Sleep Outcome
 
-### 8.1 Request Generation
+- Given `fullness = 70`, `happiness = 70`, `calmness = 70` at the start of `NIGHT`, the result is `Good Sleep`
+- Given any one of those stats is below `70` at the start of `NIGHT`, the result is `Disturbed Sleep`
 
-- Triggered during Evening
-- Randomized:
+### Requests
 
-IF random < 0.5:
-request = FOOD
-ELSE:
-request = ATTENTION
+- Given one `EVENING` phase, exactly `3` requests are generated
+- Given an active `FOOD` request, `Feed` completes it on the same tick
+- Given an active `ATTENTION` request, `Pet` completes it on the same tick
+- Given a request expires, `happiness` and `calmness` are both reduced by `10`
 
----
+### Stat Bounds
 
-### 8.2 Stat Decay
+- Stats never go below `0`
+- Stats never go above `100`
 
-Over time:
+## 14. Godot MVP Structure
 
-- Hunger decreases
-- Happiness decreases
+Recommended node / responsibility split:
 
-Energy:
+- `Main`
+- `GameManager`
+- `Cat`
+- `UI`
+- `Environment`
 
-- Increases during Day
-- Decreases slightly during Evening/Night
+Suggested ownership:
 
----
+- `GameManager`: state, ticks, transitions, request logic
+- `Cat`: animation / reaction hooks
+- `UI`: bars, timers, action buttons, sleep result
+- `Environment`: room visuals and phase-based presentation
 
-## 9. 🎬 Feedback System
+## 15. MVP Scope
 
-### Immediate Feedback
+The first playable version includes:
 
-- Success:
-  - Cat purrs
-  - Positive animation
-- Failure:
-  - Meow (loud/annoyed)
-  - Agitated animation
+- `1` room
+- `1` cat
+- `3` visible stats
+- Fixed day / evening / night loop
+- Two actions: `Feed`, `Pet`
+- Request prompts during evening
+- Sleep result screen during night
+- Basic UI only, no inventory, progression, or save system
 
-### Night Feedback
+## 16. Out of Scope for MVP
 
-- Good Sleep:
-  - Calm visuals
-  - Quiet night
-- Bad Sleep:
-  - Repeated meowing
-  - Screen interruptions
-
----
-
-## 10. 🧱 Godot Architecture
-
-### 10.1 Scene Structure
-
-Main (Node)
-├── GameManager (Node)
-├── UI (CanvasLayer)
-│ ├── Buttons
-│ ├── StatBars
-├── Cat (CharacterBody2D or Node2D)
-├── Player (Node2D)
-└── Environment (Node2D)
-
----
-
-### 10.2 Scripts
-
-- `GameManager.gd`
-  - Controls time phases
-  - Manages state transitions
-
-- `Cat.gd`
-  - Handles needs
-  - Generates requests
-
-- `UI.gd`
-  - Updates stats display
-  - Handles player input
-
----
-
-### 10.3 State Machine
-
-STATE_DAY
-STATE_EVENING
-STATE_NIGHT
-
----
-
-## 11. 📊 Balancing (Initial Values)
-
-| Stat      | Start | Decay Rate |
-| --------- | ----- | ---------- |
-| Hunger    | 50    | -5 / cycle |
-| Happiness | 50    | -5 / cycle |
-| Energy    | 50    | +10 (Day)  |
-
----
-
-## 12. 🚀 MVP Scope
-
-### Must Have
-
-- 1 room
-- 1 cat
-- 3 stats
-- 3 phases (Day/Evening/Night)
-- Basic UI (buttons + bars)
-- Sleep outcome system
-
-### Not Required (yet)
-
-- Animations
-- Sound effects
-- Multiple rooms
-- Save system
-
----
-
-## 13. 🔮 Future Enhancements
-
-- Cat personalities (needy, lazy, chaotic)
 - Multiple pets
-- Sound system (meows, purring)
-- Mobile support
-- Progression system
-- Owner fatigue system
+- Personality system
+- Long-term progression
+- Economy or shop
+- Procedural events outside the request system
 
----
+## 17. Future Extensions
 
-## 14. ✅ Success Criteria
-
-The game succeeds if:
-
-- Player understands cause → effect
-- Short gameplay loop feels engaging
-- Emotional connection with the pet is created
-- Player aims to achieve “good sleep” consistently
-
----
-
-## 15. 🧪 Testing Notes
-
-- Validate stat thresholds feel fair
-- Ensure feedback is immediate and clear
-- Avoid overwhelming the player with too many requests
-- Keep interaction loop under ~30 seconds
-
----
-
-## 16. 📌 Technical Notes
-
-- Engine: Godot 4.x
-- Resolution: 1280x720 (recommended)
-- Input: Mouse / Touch compatible
-- Target: Web (HTML5 export) or Desktop
-
----
+- Cat personalities that bias request frequency
+- More request types
+- Multiple-room apartment
+- Persistent progression between days
+- Difficulty scaling by cycle count
