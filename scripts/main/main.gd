@@ -1,6 +1,6 @@
 extends Node2D
 
-@onready var game_manager: GameManager = $GameManager
+@onready var game_manager = $GameManager
 @onready var ui_root = $UI
 @onready var cat = $Cat
 @onready var player = $Player
@@ -36,7 +36,7 @@ func _ready() -> void:
 	game_manager.sleep_evaluated.connect(cat.on_sleep_evaluated)
 	game_manager.sleep_evaluated.connect(environment.on_sleep_evaluated)
 
-	var initial_state := game_manager.get_state_snapshot()
+	var initial_state = game_manager.get_state_snapshot()
 	ui_root.apply_state(initial_state)
 	cat.apply_state(initial_state)
 	environment.apply_state(initial_state)

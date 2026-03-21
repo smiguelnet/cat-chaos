@@ -1,14 +1,19 @@
 extends Control
 
+const HUD_SCRIPT = preload("res://ui/hud.gd")
+const REQUEST_PANEL_SCRIPT = preload("res://ui/request_panel.gd")
+const SLEEP_RESULT_PANEL_SCRIPT = preload("res://ui/sleep_result_panel.gd")
+const TICK_SYSTEM = preload("res://systems/tick_system.gd")
+
 signal feed_requested
 signal pet_requested
 
-var current_state: GameState
+var current_state
 var last_sleep_result: StringName = &""
 
-var hud: CatChaosHud
-var request_panel: CatChaosRequestPanel
-var sleep_result_panel: CatChaosSleepResultPanel
+var hud
+var request_panel
+var sleep_result_panel
 var feed_button: Button
 var pet_button: Button
 
@@ -29,15 +34,15 @@ func _ready() -> void:
 	overlay.mouse_filter = Control.MOUSE_FILTER_PASS
 	root_margin.add_child(overlay)
 
-	hud = CatChaosHud.new()
+	hud = HUD_SCRIPT.new()
 	hud.position = Vector2.ZERO
 	overlay.add_child(hud)
 
-	request_panel = CatChaosRequestPanel.new()
+	request_panel = REQUEST_PANEL_SCRIPT.new()
 	request_panel.position = Vector2(450, 20)
 	overlay.add_child(request_panel)
 
-	sleep_result_panel = CatChaosSleepResultPanel.new()
+	sleep_result_panel = SLEEP_RESULT_PANEL_SCRIPT.new()
 	sleep_result_panel.position = Vector2(460, 86)
 	overlay.add_child(sleep_result_panel)
 
@@ -59,29 +64,29 @@ func _ready() -> void:
 	pet_button.pressed.connect(_on_pet_button_pressed)
 	button_box.add_child(pet_button)
 
-func apply_state(state: GameState) -> void:
+func apply_state(state) -> void:
 	current_state = state
 	hud.apply_state(state)
 	_update_buttons(state.phase)
 
-	if state.phase == TickSystem.PHASE_EVENING and state.active_request != null:
+	if state.phase == TICK_SYSTEM.PHASE_EVENING and state.active_request != null:
 		request_panel.show_request(state.active_request["type"], state.active_request["time_remaining"])
-	elif state.phase == TickSystem.PHASE_EVENING:
+	elif state.phase == TICK_SYSTEM.PHASE_EVENING:
 		request_panel.clear_request(true)
 	else:
 		request_panel.clear_request(false)
 
-	if state.phase == TickSystem.PHASE_NIGHT and last_sleep_result != &"":
+	if state.phase == TICK_SYSTEM.PHASE_NIGHT and last_sleep_result != &"":
 		sleep_result_panel.show_result(last_sleep_result)
-	elif state.phase != TickSystem.PHASE_NIGHT:
+	elif state.phase != TICK_SYSTEM.PHASE_NIGHT:
 		sleep_result_panel.hide_result()
 
 func on_phase_changed(_from_phase: StringName, to_phase: StringName) -> void:
 	_update_buttons(to_phase)
-	if to_phase != TickSystem.PHASE_NIGHT:
+	if to_phase != TICK_SYSTEM.PHASE_NIGHT:
 		last_sleep_result = &""
 		sleep_result_panel.hide_result()
-	if to_phase != TickSystem.PHASE_EVENING:
+	if to_phase != TICK_SYSTEM.PHASE_EVENING:
 		request_panel.clear_request(false)
 
 func on_request_generated(request_type: StringName, time_remaining: int) -> void:
@@ -96,7 +101,7 @@ func on_request_failed(request_type: StringName) -> void:
 	request_panel.clear_request(true)
 	request_panel.set_feedback("%s request failed." % _request_label(request_type), Color("ffd0d0"))
 
-func on_sleep_evaluated(result: StringName, _state: GameState) -> void:
+func on_sleep_evaluated(result: StringName, _state) -> void:
 	last_sleep_result = result
 	sleep_result_panel.show_result(result)
 
@@ -111,7 +116,7 @@ func _on_pet_button_pressed() -> void:
 	pet_requested.emit()
 
 func _update_buttons(phase: StringName) -> void:
-	var enabled := TickSystem.can_accept_actions(phase)
+	var enabled: bool = TICK_SYSTEM.can_accept_actions(phase)
 	feed_button.disabled = not enabled
 	pet_button.disabled = not enabled
 

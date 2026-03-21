@@ -10,8 +10,8 @@ class_name GameState
 @export var cycle_index: int = 1
 @export var rng_state: int = 0
 
-func duplicate_state() -> GameState:
-	var copy := GameState.new()
+func duplicate_state():
+	var copy = get_script().new()
 	copy.phase = phase
 	copy.phase_time_remaining = phase_time_remaining
 	copy.fullness = fullness

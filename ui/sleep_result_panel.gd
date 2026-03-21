@@ -1,6 +1,8 @@
 extends PanelContainer
 class_name CatChaosSleepResultPanel
 
+const SLEEP_EVALUATOR = preload("res://systems/sleep_evaluator.gd")
+
 var result_label: Label
 
 func _ready() -> void:
@@ -17,7 +19,7 @@ func _ready() -> void:
 func show_result(result: StringName) -> void:
 	visible = true
 	result_label.text = "Sleep Result: %s" % result
-	result_label.modulate = Color("b8ffd1") if result == SleepEvaluator.RESULT_GOOD_SLEEP else Color("ffd0d0")
+	result_label.modulate = Color("b8ffd1") if result == SLEEP_EVALUATOR.RESULT_GOOD_SLEEP else Color("ffd0d0")
 
 func hide_result() -> void:
 	visible = false

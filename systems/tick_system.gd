@@ -14,12 +14,12 @@ static func can_accept_actions(phase: StringName) -> bool:
 static func clamp_stat(value: int) -> int:
 	return clampi(value, 0, 100)
 
-static func clamp_state(state: GameState) -> void:
+static func clamp_state(state) -> void:
 	state.fullness = clamp_stat(state.fullness)
 	state.happiness = clamp_stat(state.happiness)
 	state.calmness = clamp_stat(state.calmness)
 
-static func phase_duration(config: GameConfig, phase: StringName) -> int:
+static func phase_duration(config, phase: StringName) -> int:
 	match phase:
 		PHASE_DAY:
 			return config.day_duration
@@ -39,14 +39,14 @@ static func next_phase(current_phase: StringName) -> StringName:
 		_:
 			return PHASE_DAY
 
-static func apply_action(state: GameState, config: GameConfig, action: StringName) -> void:
+static func apply_action(state, config, action: StringName) -> void:
 	if action == ACTION_FEED:
 		state.fullness += config.feed_amount
 	elif action == ACTION_PET:
 		state.happiness += config.pet_amount
 	clamp_state(state)
 
-static func apply_passive_rules(state: GameState, config: GameConfig) -> void:
+static func apply_passive_rules(state, config) -> void:
 	match state.phase:
 		PHASE_DAY:
 			state.fullness -= config.fullness_decay_per_tick
@@ -59,7 +59,7 @@ static func apply_passive_rules(state: GameState, config: GameConfig) -> void:
 			pass
 	clamp_state(state)
 
-static func apply_request_failure_penalty(state: GameState, config: GameConfig) -> void:
+static func apply_request_failure_penalty(state, config) -> void:
 	state.happiness -= config.request_fail_happiness_penalty
 	state.calmness -= config.request_fail_calmness_penalty
 	clamp_state(state)

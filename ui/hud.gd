@@ -26,7 +26,7 @@ func _ready() -> void:
 	content.add_child(happiness_label)
 	content.add_child(calmness_label)
 
-func apply_state(state: GameState) -> void:
+func apply_state(state) -> void:
 	phase_label.text = "Phase: %s" % state.phase
 	timer_label.text = "Phase Timer: %ss" % state.phase_time_remaining
 	fullness_label.text = "Fullness: %s" % state.fullness

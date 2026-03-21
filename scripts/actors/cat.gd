@@ -1,7 +1,10 @@
 extends Node2D
 class_name CatPresentation
 
-var current_phase: StringName = TickSystem.PHASE_DAY
+const TICK_SYSTEM = preload("res://systems/tick_system.gd")
+const SLEEP_EVALUATOR = preload("res://systems/sleep_evaluator.gd")
+
+var current_phase: StringName = TICK_SYSTEM.PHASE_DAY
 var mood: StringName = &"IDLE"
 var active_request_type: StringName = &""
 var sleep_result: StringName = &""
@@ -9,21 +12,21 @@ var sleep_result: StringName = &""
 func _ready() -> void:
 	queue_redraw()
 
-func apply_state(state: GameState) -> void:
+func apply_state(state) -> void:
 	current_phase = state.phase
-	if state.active_request == null and current_phase != TickSystem.PHASE_NIGHT and mood == &"REQUESTING":
+	if state.active_request == null and current_phase != TICK_SYSTEM.PHASE_NIGHT and mood == &"REQUESTING":
 		mood = &"IDLE"
-	if current_phase == TickSystem.PHASE_NIGHT:
+	if current_phase == TICK_SYSTEM.PHASE_NIGHT:
 		mood = &"SLEEPING"
 	active_request_type = &"" if state.active_request == null else state.active_request["type"]
 	queue_redraw()
 
 func on_phase_changed(_from_phase: StringName, to_phase: StringName) -> void:
 	current_phase = to_phase
-	if to_phase == TickSystem.PHASE_DAY:
+	if to_phase == TICK_SYSTEM.PHASE_DAY:
 		mood = &"IDLE"
 		sleep_result = &""
-	elif to_phase == TickSystem.PHASE_NIGHT:
+	elif to_phase == TICK_SYSTEM.PHASE_NIGHT:
 		mood = &"SLEEPING"
 	queue_redraw()
 
@@ -42,16 +45,16 @@ func on_request_failed(_request_type: StringName) -> void:
 	mood = &"UPSET"
 	queue_redraw()
 
-func on_sleep_evaluated(result: StringName, _state: GameState) -> void:
+func on_sleep_evaluated(result: StringName, _state) -> void:
 	sleep_result = result
 	mood = &"SLEEPING"
 	queue_redraw()
 
 func _draw() -> void:
 	var fur_color := Color("bd8857")
-	if current_phase == TickSystem.PHASE_EVENING:
+	if current_phase == TICK_SYSTEM.PHASE_EVENING:
 		fur_color = Color("c08f63")
-	elif current_phase == TickSystem.PHASE_NIGHT:
+	elif current_phase == TICK_SYSTEM.PHASE_NIGHT:
 		fur_color = Color("8c7b87")
 
 	if mood == &"SATISFIED":
@@ -88,8 +91,8 @@ func _draw() -> void:
 	elif active_request_type == &"ATTENTION":
 		draw_circle(Vector2(94, -54), 16.0, Color("ff7f7f"))
 
-	if sleep_result == SleepEvaluator.RESULT_GOOD_SLEEP:
+	if sleep_result == SLEEP_EVALUATOR.RESULT_GOOD_SLEEP:
 		draw_arc(Vector2(0, -104), 18.0, 0.2, PI - 0.2, 16, Color("fff3b1"), 3.0)
-	elif sleep_result == SleepEvaluator.RESULT_DISTURBED_SLEEP:
+	elif sleep_result == SLEEP_EVALUATOR.RESULT_DISTURBED_SLEEP:
 		draw_line(Vector2(-16, -118), Vector2(0, -98), Color("d4b4ff"), 3.0)
 		draw_line(Vector2(0, -98), Vector2(16, -118), Color("d4b4ff"), 3.0)
