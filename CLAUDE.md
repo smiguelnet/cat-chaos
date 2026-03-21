@@ -4,7 +4,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-Cat Chaos is a small 2D pet-care game for Godot. The project is currently **spec-first**: comprehensive documentation exists but the game implementation does not yet exist in the repository.
+Cat Chaos is a small 2D pet-care game for Godot. The project remains **spec-first**, but the repository now also includes an initial MVP implementation, placeholder presentation, and automated tests.
 
 **Core concept**: Player manages one cat through a deterministic day loop (DAY → EVENING → NIGHT), trying to reach bedtime with the cat fed, happy, and calm enough for peaceful sleep.
 

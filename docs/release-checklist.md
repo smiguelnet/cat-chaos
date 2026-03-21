@@ -2,21 +2,21 @@
 
 ## 1. Current Verification Status
 
-- [ ] Confirm the repository contains the implementation described in the architecture:
+- [x] Confirm the repository contains the implementation described in the architecture:
   - `/scenes`
   - `/scripts`
   - `/systems`
   - `/ui`
   - `/data`
   - `/tests`
-- [ ] Confirm a playable Godot project exists (`project.godot`, main scene, resources, scripts).
-- [ ] Confirm automated tests exist for the gameplay rules in `docs/spec.md`.
+- [x] Confirm a playable Godot project exists (`project.godot`, main scene, resources, scripts).
+- [x] Confirm automated tests exist for the gameplay rules in `docs/spec.md`.
 
 ### Status Today
 
-- Current repository contents are documentation only: `docs/spec.md`, `docs/architecture.md`, and this checklist.
-- The game implementation is not present, so the game cannot be verified as correct yet.
-- The previous spec/architecture consistency issues have been resolved in the docs:
+- The repository now contains the Godot project scaffold, gameplay scripts, UI/presentation placeholders, resources, and automated tests described by the docs.
+- Runtime validation is still pending because a Godot binary is not available in the current environment.
+- The previous spec/architecture consistency issues remain resolved in the docs and are reflected in code:
   - `active_request` is canonically `null` when no request is active.
   - Matching a request applies the triggering action's normal stat gain exactly once and adds no extra completion bonus.
 

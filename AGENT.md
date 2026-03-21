@@ -4,7 +4,7 @@ This file gives project-specific instructions to coding agents working in this r
 
 ## Project Status
 
-Cat Chaos is a spec-first Godot project. The repository currently contains design and planning documents, not a playable implementation yet.
+Cat Chaos is now a spec-first Godot project with an initial MVP implementation checked in. The repository contains the design docs plus a playable project scaffold, deterministic gameplay code, UI/presentation placeholders, and automated tests.
 
 Core MVP:
 
@@ -111,7 +111,7 @@ Preferred repository layout:
 
 ## Implementation Guidance
 
-When building the project, prefer this sequence:
+When extending the project, prefer this sequence:
 
 1. Create the Godot project and main scene composition.
 2. Add `GameState` and `GameConfig` resources or equivalents.

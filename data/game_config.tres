@@ -1,0 +1,23 @@
+[gd_resource type="Resource" script_class="GameConfig" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/gameplay/game_config.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+day_duration = 10
+evening_duration = 15
+night_duration = 5
+request_window_duration = 5
+initial_fullness = 80
+initial_happiness = 80
+initial_calmness = 60
+initial_seed = 1337
+fullness_decay_per_tick = 1
+happiness_decay_per_tick = 1
+calmness_gain_day_per_tick = 2
+feed_amount = 20
+pet_amount = 20
+request_fail_happiness_penalty = 10
+request_fail_calmness_penalty = 10
+sleep_threshold = 70
+request_types = Array[StringName]([&"FOOD", &"ATTENTION"])

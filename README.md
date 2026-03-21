@@ -2,7 +2,7 @@
 
 Cat Chaos is a small 2D pet-care game built around a deterministic day loop. The player manages one cat through `DAY`, `EVENING`, and `NIGHT`, trying to reach bedtime with the cat fed, happy, and calm enough for a peaceful sleep.
 
-The project is currently in the design and planning stage. This repository contains the product spec, architecture, art direction, and release checklist for the MVP.
+The repository now contains a playable Godot MVP scaffold, the deterministic gameplay implementation, and a custom headless test runner alongside the original planning documents.
 
 ## Overview
 
@@ -83,10 +83,10 @@ The visual direction is deliberately scoped to support readability and fast impl
 
 Current status:
 
-- documentation exists
-- game implementation does not yet exist in the repository
-- automated gameplay tests do not yet exist
-- release verification cannot be completed yet
+- Godot project structure exists with `Main`, `GameManager`, `UI`, `Cat`, `Player`, and `Environment`
+- deterministic gameplay rules are implemented in GDScript
+- automated gameplay tests exist under `/tests`
+- runtime verification is still pending in an environment with a Godot binary
 
 Resolved cross-doc decisions now reflected in the specs:
 
@@ -112,14 +112,12 @@ When implementation begins, the expected MVP behavior includes:
 
 ## Roadmap
 
-Near-term work implied by the docs:
+Next verification work:
 
-1. Create the Godot project and main scene structure.
-2. Implement `GameManager` and the deterministic tick/update flow.
-3. Add UI for stats, timers, requests, and sleep results.
-4. Add `Cat` and `Environment` presentation hooks.
-5. Add unit and integration tests for the gameplay rules.
-6. Resolve the remaining spec/architecture consistency issues before release.
+1. Open the project in Godot and confirm all scenes/resources load cleanly.
+2. Run `godot --headless -s res://tests/run_tests.gd` and fix any runtime issues.
+3. Create release exports from the checked-in preset configuration.
+4. Replace placeholder presentation/audio with approved MVP assets.
 
 ## Contributing
 
