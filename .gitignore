@@ -1,0 +1,72 @@
+# Godot 4+ .gitignore
+
+# Godot-specific
+
+.import/
+.export/
+.export.cfg
+
+# Godot cache files
+
+*.translation
+
+# Mono / C# (if used)
+
+.mono/
+data_*/
+mono_crash.*.json
+
+# Build / export artifacts
+
+*.apk
+*.aab
+*.ipa
+*.exe
+*.x86_64
+*.x86
+*.pck
+*.zip
+
+# OS-generated files
+
+.DS_Store
+Thumbs.db
+
+# Editor settings (optional: ignore if you want personal configs only)
+
+.godot/
+
+# Logs
+
+*.log
+
+# Temporary files
+
+*.tmp
+*.temp
+
+# IDEs
+
+## Visual Studio Code
+
+.vscode/
+
+## JetBrains (IntelliJ, Rider, etc.)
+
+.idea/
+
+## Visual Studio
+
+*.sln
+*.csproj
+*.user
+*.userprefs
+
+# Backup files
+
+*~
+*.bak
+
+# Environment files
+
+.env
