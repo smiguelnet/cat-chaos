@@ -4,17 +4,23 @@ class_name EnvironmentPresentation
 const TICK_SYSTEM = preload("res://systems/tick_system.gd")
 const SLEEP_EVALUATOR = preload("res://systems/sleep_evaluator.gd")
 
+@onready var background_music: AudioStreamPlayer = $BackgroundMusic
+
 var current_phase: StringName = TICK_SYSTEM.PHASE_DAY
 var last_sleep_result: StringName = &""
 var request_failed_flash: bool = false
 
 func _ready() -> void:
+	if background_music != null:
+		background_music.finished.connect(_on_background_music_finished)
+	_update_music_state()
 	queue_redraw()
 
 func apply_state(state) -> void:
 	current_phase = state.phase
 	if state.phase != TICK_SYSTEM.PHASE_EVENING:
 		request_failed_flash = false
+	_update_music_state()
 	queue_redraw()
 
 func on_phase_changed(_from_phase: StringName, to_phase: StringName) -> void:
@@ -22,6 +28,7 @@ func on_phase_changed(_from_phase: StringName, to_phase: StringName) -> void:
 	request_failed_flash = false
 	if to_phase != TICK_SYSTEM.PHASE_NIGHT:
 		last_sleep_result = &""
+	_update_music_state()
 	queue_redraw()
 
 func on_request_failed(_request_type: StringName) -> void:
@@ -32,6 +39,26 @@ func on_sleep_evaluated(result: StringName, _state) -> void:
 	last_sleep_result = result
 	request_failed_flash = false
 	queue_redraw()
+
+func _on_background_music_finished() -> void:
+	if _should_play_music():
+		background_music.play()
+
+func _should_play_music() -> bool:
+	return current_phase != TICK_SYSTEM.PHASE_NIGHT
+
+func _update_music_state() -> void:
+	if background_music == null:
+		return
+
+	if not _should_play_music():
+		if background_music.playing:
+			background_music.stop()
+		return
+
+	background_music.volume_db = -8.5 if current_phase == TICK_SYSTEM.PHASE_EVENING else -6.5
+	if not background_music.playing:
+		background_music.play()
 
 func _draw() -> void:
 	var viewport_size := get_viewport_rect().size

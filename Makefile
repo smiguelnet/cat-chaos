@@ -13,7 +13,7 @@ WIN_OUT := $(BUILD_DIR)/windows/$(GAME_NAME).exe
 LINUX_OUT := $(BUILD_DIR)/linux/$(GAME_NAME).x86_64
 WEB_OUT := $(BUILD_DIR)/web/index.html
 
-.PHONY: all clean windows linux web
+.PHONY: all clean import windows linux web
 
 # The repository currently ships with a Linux/X11 preset in export_presets.cfg.
 all: clean linux
@@ -21,6 +21,9 @@ all: clean linux
 clean:
 	rm -rf $(BUILD_DIR)
 	mkdir -p $(BUILD_DIR)
+
+import:
+	$(GODOT) --headless --import --path $(PROJECT_PATH)
 
 windows:
 	mkdir -p $(BUILD_DIR)/windows

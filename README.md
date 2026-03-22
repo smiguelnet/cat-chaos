@@ -19,7 +19,13 @@ The MVP is intentionally narrow:
 
 This project is configured for Godot `4.6` with `res://scenes/main/Main.tscn` set as the main scene.
 
-To run the game from the repository root:
+On a fresh checkout, import the asset files once before starting the game:
+
+```bash
+godot --headless --import --path .
+```
+
+Then run the game from the repository root:
 
 ```bash
 godot --path .
@@ -103,6 +109,7 @@ First-time setup checklist:
 - Install `make`
 - Install `godot` and ensure it is available on your `PATH`
 - Install Godot export templates
+- Import project assets once with `make import` or `godot --headless --import --path .`
 - Confirm the required export preset exists in `export_presets.cfg`
 
 From the repository root, the first export run is:
@@ -116,6 +123,7 @@ The default `all` target currently runs `clean` and `linux`, which exports the L
 Other useful targets:
 
 ```bash
+make import
 make clean
 make linux
 make windows
