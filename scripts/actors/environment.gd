@@ -7,6 +7,7 @@ const ROOM_BACKGROUND_PATH := "res://assets/sprites/environment/room.jpg"
 
 @onready var background_sprite: Sprite2D = $BackgroundSprite
 @onready var background_music: AudioStreamPlayer = $BackgroundMusic
+@onready var disturbed_sleep_music: AudioStreamPlayer = $DisturbedSleepMusic
 
 var current_phase: StringName = TICK_SYSTEM.PHASE_DAY
 var last_sleep_result: StringName = &""
@@ -16,6 +17,8 @@ func _ready() -> void:
 	_load_background_texture()
 	if background_music != null:
 		background_music.finished.connect(_on_background_music_finished)
+	if disturbed_sleep_music != null:
+		disturbed_sleep_music.finished.connect(_on_disturbed_sleep_music_finished)
 	_update_music_state()
 	_update_background_visuals()
 	queue_redraw()
@@ -44,27 +47,40 @@ func on_request_failed(_request_type: StringName) -> void:
 func on_sleep_evaluated(result: StringName, _state) -> void:
 	last_sleep_result = result
 	request_failed_flash = false
+	_update_music_state()
 	queue_redraw()
 
 func _on_background_music_finished() -> void:
 	if _should_play_music():
 		background_music.play()
 
+func _on_disturbed_sleep_music_finished() -> void:
+	if _should_play_disturbed_sleep_music():
+		disturbed_sleep_music.play()
+
 func _should_play_music() -> bool:
 	return current_phase != TICK_SYSTEM.PHASE_NIGHT
 
+func _should_play_disturbed_sleep_music() -> bool:
+	return current_phase == TICK_SYSTEM.PHASE_NIGHT \
+		and last_sleep_result == SLEEP_EVALUATOR.RESULT_DISTURBED_SLEEP
+
 func _update_music_state() -> void:
-	if background_music == null:
-		return
+	if background_music != null:
+		if not _should_play_music():
+			if background_music.playing:
+				background_music.stop()
+		else:
+			background_music.volume_db = -8.5 if current_phase == TICK_SYSTEM.PHASE_EVENING else -6.5
+			if not background_music.playing:
+				background_music.play()
 
-	if not _should_play_music():
-		if background_music.playing:
-			background_music.stop()
-		return
-
-	background_music.volume_db = -8.5 if current_phase == TICK_SYSTEM.PHASE_EVENING else -6.5
-	if not background_music.playing:
-		background_music.play()
+	if disturbed_sleep_music != null:
+		if not _should_play_disturbed_sleep_music():
+			if disturbed_sleep_music.playing:
+				disturbed_sleep_music.stop()
+		elif not disturbed_sleep_music.playing:
+			disturbed_sleep_music.play()
 
 func _load_background_texture() -> void:
 	if background_sprite == null or not FileAccess.file_exists(ROOM_BACKGROUND_PATH):

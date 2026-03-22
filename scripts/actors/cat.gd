@@ -36,6 +36,8 @@ var snore_cooldown: float = 0.0
 
 func _ready() -> void:
 	set_process(true)
+	if meow_player != null:
+		meow_player.finished.connect(_on_meow_finished)
 	_update_visuals()
 	queue_redraw()
 
@@ -195,6 +197,11 @@ func _update_visuals() -> void:
 	sprite.flip_h = active_request_type == &"ATTENTION"
 
 func _update_meow_loop(delta: float) -> void:
+	if _should_play_furious_night_meow():
+		if meow_player != null and not meow_player.playing:
+			_play_meow()
+		return
+
 	if active_request_type == &"" or current_phase == TICK_SYSTEM.PHASE_NIGHT:
 		return
 
@@ -241,10 +248,19 @@ func _play_snore() -> void:
 	snore_player.stop()
 	snore_player.play()
 
+func _on_meow_finished() -> void:
+	if _should_play_furious_night_meow():
+		meow_player.play()
+
 func _should_play_snore() -> bool:
 	return current_phase == TICK_SYSTEM.PHASE_NIGHT \
 		and mood == &"SLEEPING" \
 		and sleep_result == SLEEP_EVALUATOR.RESULT_GOOD_SLEEP
+
+func _should_play_furious_night_meow() -> bool:
+	return current_phase == TICK_SYSTEM.PHASE_NIGHT \
+		and mood == &"FURIOUS" \
+		and sleep_result == SLEEP_EVALUATOR.RESULT_DISTURBED_SLEEP
 
 func _draw() -> void:
 	var shadow_alpha := 0.16 if current_phase != TICK_SYSTEM.PHASE_NIGHT else 0.24

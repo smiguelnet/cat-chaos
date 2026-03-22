@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3]
+[gd_scene load_steps=4 format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/environment.gd" id="1"]
 [ext_resource type="AudioStream" path="res://assets/audio/music/background.wav" id="2"]
+[ext_resource type="AudioStream" path="res://assets/audio/music/desperate-times.mp3" id="3"]
 
 [node name="Environment" type="Node2D"]
 script = ExtResource("1")
@@ -13,3 +14,7 @@ z_index = -10
 [node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("2")
 volume_db = -7.0
+
+[node name="DisturbedSleepMusic" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("3")
+volume_db = -8.0
