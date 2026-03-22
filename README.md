@@ -15,6 +15,85 @@ The MVP is intentionally narrow:
 - fixed loop: `DAY (10s) -> EVENING (15s) -> NIGHT (5s)`
 - deterministic rules with seeded request generation
 
+## Running the Game
+
+This project is configured for Godot `4.6` with `res://scenes/main/Main.tscn` set as the main scene.
+
+To run the game from the repository root:
+
+```bash
+godot --path .
+```
+
+If you prefer the editor workflow, open the project in Godot and press `Play`.
+
+## Godot Build Guide
+
+### 1. Prepare Project
+
+- Confirm the main scene is set:
+  - `Project -> Project Settings -> Application -> Run -> Main Scene`
+- This repository already points to `res://scenes/main/Main.tscn`
+- Test the game with `Play`
+
+### 2. Install Export Templates
+
+- Open:
+  - `Editor -> Manage Export Templates`
+- Click `Download and Install`
+
+### 3. Configure Export
+
+- Open:
+  - `Project -> Export`
+- Click `Add...`
+- Choose a target platform:
+  - `Windows`
+  - `Linux`
+  - `macOS`
+  - `Android`
+  - `Web (HTML5)`
+- This repository already includes a sample `Linux/X11` export preset in `export_presets.cfg`
+
+### 4. Platform Settings
+
+- Set the export path
+- Set the output file name
+
+Notes:
+
+- `Windows` typically exports `.exe` and `.pck`
+- `Linux` exports a native executable and `.pck` when not embedded
+- `Android` requires the Android SDK and a signing keystore
+- `Web` generates an `.html` build plus supporting files
+
+### 5. Export Build
+
+- Click `Export Project` for a single target
+- Or click `Export All` to build every configured preset
+
+### 6. Test Build
+
+Run the exported output for the selected platform:
+
+- `Windows` -> `.exe`
+- `Linux` -> native executable
+- `Android` -> `.apk`
+- `Web` -> open the generated `.html`
+
+### 7. Share
+
+- Zip the exported files if needed
+- Upload them to your release channel, such as `itch.io`
+
+### CLI Export (Optional)
+
+Once a preset is configured, you can export from the command line. For the sample Linux preset in this repository:
+
+```bash
+godot --headless --path . --export-release "Linux/X11" build/cat-chaos.x86_64
+```
+
 The design goal is clarity over content depth. Every action should have readable cause-and-effect, and the game should be small enough to implement cleanly in Godot.
 
 ## Core Gameplay Loop
