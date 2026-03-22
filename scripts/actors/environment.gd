@@ -3,7 +3,6 @@ class_name EnvironmentPresentation
 
 const TICK_SYSTEM = preload("res://systems/tick_system.gd")
 const SLEEP_EVALUATOR = preload("res://systems/sleep_evaluator.gd")
-const ROOM_BACKGROUND_PATH := "res://assets/sprites/environment/room.jpg"
 
 @onready var background_sprite: Sprite2D = $BackgroundSprite
 @onready var background_music: AudioStreamPlayer = $BackgroundMusic
@@ -14,7 +13,6 @@ var last_sleep_result: StringName = &""
 var request_failed_flash: bool = false
 
 func _ready() -> void:
-	_load_background_texture()
 	if background_music != null:
 		background_music.finished.connect(_on_background_music_finished)
 	if disturbed_sleep_music != null:
@@ -81,17 +79,6 @@ func _update_music_state() -> void:
 				disturbed_sleep_music.stop()
 		elif not disturbed_sleep_music.playing:
 			disturbed_sleep_music.play()
-
-func _load_background_texture() -> void:
-	if background_sprite == null or not FileAccess.file_exists(ROOM_BACKGROUND_PATH):
-		return
-
-	var image := Image.load_from_file(ROOM_BACKGROUND_PATH)
-	if image == null or image.is_empty():
-		return
-
-	background_sprite.texture = ImageTexture.create_from_image(image)
-	_fit_background_to_viewport()
 
 func _fit_background_to_viewport() -> void:
 	if background_sprite == null or background_sprite.texture == null:

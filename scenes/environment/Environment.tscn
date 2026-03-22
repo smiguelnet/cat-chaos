@@ -1,8 +1,9 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=5 format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/environment.gd" id="1"]
 [ext_resource type="AudioStream" path="res://assets/audio/music/background.wav" id="2"]
 [ext_resource type="AudioStream" path="res://assets/audio/music/desperate-times.mp3" id="3"]
+[ext_resource type="Texture2D" path="res://assets/sprites/environment/room.jpg" id="4"]
 
 [node name="Environment" type="Node2D"]
 script = ExtResource("1")
@@ -10,6 +11,7 @@ script = ExtResource("1")
 [node name="BackgroundSprite" type="Sprite2D" parent="."]
 centered = false
 z_index = -10
+texture = ExtResource("4")
 
 [node name="BackgroundMusic" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("2")
