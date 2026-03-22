@@ -17,9 +17,13 @@ const SLEEP_FRAMES := [2, 3, 4, 5]
 const BASE_SPRITE_POSITION := Vector2(0, -8)
 const BASE_SPRITE_SCALE := Vector2(3.2, 3.2)
 const MEOW_REPEAT_INTERVAL := 1.8
+const ALERT_REPEAT_INTERVAL := 3.4
+const SNORE_REPEAT_INTERVAL := 2.0
 
 @onready var sprite: Sprite2D = $Sprite
 @onready var meow_player: AudioStreamPlayer = $MeowPlayer
+@onready var alert_player: AudioStreamPlayer = $AlertPlayer
+@onready var snore_player: AudioStreamPlayer = $SnorePlayer
 
 var current_phase: StringName = TICK_SYSTEM.PHASE_DAY
 var mood: StringName = &"IDLE"
@@ -27,6 +31,8 @@ var active_request_type: StringName = &""
 var sleep_result: StringName = &""
 var animation_time: float = 0.0
 var meow_cooldown: float = 0.0
+var alert_cooldown: float = 0.0
+var snore_cooldown: float = 0.0
 
 func _ready() -> void:
 	set_process(true)
@@ -36,6 +42,8 @@ func _ready() -> void:
 func _process(delta: float) -> void:
 	animation_time += delta
 	_update_meow_loop(delta)
+	_update_alert_loop(delta)
+	_update_snore_loop(delta)
 	_update_visuals()
 	queue_redraw()
 
@@ -48,6 +56,9 @@ func apply_state(state) -> void:
 	active_request_type = &"" if state.active_request == null else state.active_request["type"]
 	if active_request_type == &"":
 		meow_cooldown = 0.0
+		alert_cooldown = 0.0
+	if not _should_play_snore():
+		snore_cooldown = 0.0
 	_update_visuals()
 	queue_redraw()
 
@@ -56,11 +67,20 @@ func on_phase_changed(_from_phase: StringName, to_phase: StringName) -> void:
 	if to_phase == TICK_SYSTEM.PHASE_DAY:
 		mood = &"IDLE"
 		sleep_result = &""
+		snore_cooldown = 0.0
+		if snore_player != null and snore_player.playing:
+			snore_player.stop()
 	elif to_phase == TICK_SYSTEM.PHASE_NIGHT:
 		mood = &"SLEEPING"
 		meow_cooldown = 0.0
+		alert_cooldown = 0.0
+		snore_cooldown = 0.0
 		if meow_player != null and meow_player.playing:
 			meow_player.stop()
+		if alert_player != null and alert_player.playing:
+			alert_player.stop()
+		if snore_player != null and snore_player.playing:
+			snore_player.stop()
 	_update_visuals()
 	queue_redraw()
 
@@ -68,7 +88,9 @@ func on_request_generated(request_type: StringName, _time_remaining: int) -> voi
 	active_request_type = request_type
 	mood = &"REQUESTING"
 	meow_cooldown = 0.0
+	alert_cooldown = 0.0
 	_play_meow()
+	_play_alert()
 	_update_visuals()
 	queue_redraw()
 
@@ -76,8 +98,13 @@ func on_request_completed(_request_type: StringName) -> void:
 	active_request_type = &""
 	mood = &"SATISFIED"
 	meow_cooldown = 0.0
+	alert_cooldown = 0.0
 	if meow_player != null and meow_player.playing:
 		meow_player.stop()
+	if alert_player != null and alert_player.playing:
+		alert_player.stop()
+	if snore_player != null and snore_player.playing:
+		snore_player.stop()
 	_update_visuals()
 	queue_redraw()
 
@@ -85,14 +112,25 @@ func on_request_failed(_request_type: StringName) -> void:
 	active_request_type = &""
 	mood = &"UPSET"
 	meow_cooldown = 0.0
+	alert_cooldown = 0.0
 	if meow_player != null and meow_player.playing:
 		meow_player.stop()
+	if alert_player != null and alert_player.playing:
+		alert_player.stop()
+	if snore_player != null and snore_player.playing:
+		snore_player.stop()
 	_update_visuals()
 	queue_redraw()
 
 func on_sleep_evaluated(result: StringName, _state) -> void:
 	sleep_result = result
 	mood = &"FURIOUS" if result == SLEEP_EVALUATOR.RESULT_DISTURBED_SLEEP else &"SLEEPING"
+	snore_cooldown = 0.0
+	if _should_play_snore():
+		_play_snore()
+	else:
+		if snore_player != null and snore_player.playing:
+			snore_player.stop()
 	_update_visuals()
 	queue_redraw()
 
@@ -165,11 +203,48 @@ func _update_meow_loop(delta: float) -> void:
 		_play_meow()
 		meow_cooldown = MEOW_REPEAT_INTERVAL
 
+func _update_alert_loop(delta: float) -> void:
+	if active_request_type == &"" or current_phase == TICK_SYSTEM.PHASE_NIGHT:
+		return
+
+	alert_cooldown -= delta
+	if alert_cooldown <= 0.0:
+		_play_alert()
+		alert_cooldown = ALERT_REPEAT_INTERVAL
+
+func _update_snore_loop(delta: float) -> void:
+	if not _should_play_snore():
+		if snore_player != null and snore_player.playing:
+			snore_player.stop()
+		return
+
+	snore_cooldown -= delta
+	if snore_cooldown <= 0.0:
+		_play_snore()
+		snore_cooldown = SNORE_REPEAT_INTERVAL
+
 func _play_meow() -> void:
 	if meow_player == null:
 		return
 	meow_player.stop()
 	meow_player.play()
+
+func _play_alert() -> void:
+	if alert_player == null:
+		return
+	alert_player.stop()
+	alert_player.play()
+
+func _play_snore() -> void:
+	if snore_player == null:
+		return
+	snore_player.stop()
+	snore_player.play()
+
+func _should_play_snore() -> bool:
+	return current_phase == TICK_SYSTEM.PHASE_NIGHT \
+		and mood == &"SLEEPING" \
+		and sleep_result == SLEEP_EVALUATOR.RESULT_GOOD_SLEEP
 
 func _draw() -> void:
 	var shadow_alpha := 0.16 if current_phase != TICK_SYSTEM.PHASE_NIGHT else 0.24

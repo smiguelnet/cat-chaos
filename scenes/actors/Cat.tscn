@@ -1,8 +1,10 @@
-[gd_scene load_steps=4 format=3]
+[gd_scene load_steps=6 format=3]
 
 [ext_resource type="Script" path="res://scripts/actors/cat.gd" id="1"]
 [ext_resource type="Texture2D" path="res://assets/sprites/cats/cat_spritesheet.png" id="2"]
 [ext_resource type="AudioStream" path="res://assets/audio/sfx/meow.ogg" id="3"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/classic-alarm.wav" id="4"]
+[ext_resource type="AudioStream" path="res://assets/audio/sfx/man-strong-snore.wav" id="5"]
 
 [node name="Cat" type="Node2D"]
 position = Vector2(640, 440)
@@ -18,3 +20,11 @@ region_rect = Rect2(128, 0, 128, 64)
 [node name="MeowPlayer" type="AudioStreamPlayer" parent="."]
 stream = ExtResource("3")
 volume_db = -9.0
+
+[node name="AlertPlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("4")
+volume_db = -12.0
+
+[node name="SnorePlayer" type="AudioStreamPlayer" parent="."]
+stream = ExtResource("5")
+volume_db = -10.0
