@@ -3,7 +3,9 @@ class_name EnvironmentPresentation
 
 const TICK_SYSTEM = preload("res://systems/tick_system.gd")
 const SLEEP_EVALUATOR = preload("res://systems/sleep_evaluator.gd")
+const ROOM_BACKGROUND_PATH := "res://assets/sprites/environment/room.jpg"
 
+@onready var background_sprite: Sprite2D = $BackgroundSprite
 @onready var background_music: AudioStreamPlayer = $BackgroundMusic
 
 var current_phase: StringName = TICK_SYSTEM.PHASE_DAY
@@ -11,9 +13,11 @@ var last_sleep_result: StringName = &""
 var request_failed_flash: bool = false
 
 func _ready() -> void:
+	_load_background_texture()
 	if background_music != null:
 		background_music.finished.connect(_on_background_music_finished)
 	_update_music_state()
+	_update_background_visuals()
 	queue_redraw()
 
 func apply_state(state) -> void:
@@ -21,6 +25,7 @@ func apply_state(state) -> void:
 	if state.phase != TICK_SYSTEM.PHASE_EVENING:
 		request_failed_flash = false
 	_update_music_state()
+	_update_background_visuals()
 	queue_redraw()
 
 func on_phase_changed(_from_phase: StringName, to_phase: StringName) -> void:
@@ -29,6 +34,7 @@ func on_phase_changed(_from_phase: StringName, to_phase: StringName) -> void:
 	if to_phase != TICK_SYSTEM.PHASE_NIGHT:
 		last_sleep_result = &""
 	_update_music_state()
+	_update_background_visuals()
 	queue_redraw()
 
 func on_request_failed(_request_type: StringName) -> void:
@@ -60,32 +66,66 @@ func _update_music_state() -> void:
 	if not background_music.playing:
 		background_music.play()
 
-func _draw() -> void:
+func _load_background_texture() -> void:
+	if background_sprite == null or not FileAccess.file_exists(ROOM_BACKGROUND_PATH):
+		return
+
+	var image := Image.load_from_file(ROOM_BACKGROUND_PATH)
+	if image == null or image.is_empty():
+		return
+
+	background_sprite.texture = ImageTexture.create_from_image(image)
+	_fit_background_to_viewport()
+
+func _fit_background_to_viewport() -> void:
+	if background_sprite == null or background_sprite.texture == null:
+		return
+
 	var viewport_size := get_viewport_rect().size
-	var sky_color := Color("f5dcae")
-	var floor_color := Color("b98754")
-	var accent_color := Color("f8efcf")
+	var texture_size := background_sprite.texture.get_size()
+	if texture_size.x <= 0.0 or texture_size.y <= 0.0:
+		return
+
+	background_sprite.position = Vector2.ZERO
+	background_sprite.scale = Vector2(
+		viewport_size.x / texture_size.x,
+		viewport_size.y / texture_size.y
+	)
+
+func _update_background_visuals() -> void:
+	if background_sprite == null:
+		return
+
+	_fit_background_to_viewport()
 
 	match current_phase:
 		TICK_SYSTEM.PHASE_DAY:
-			sky_color = Color("f5dcae")
-			floor_color = Color("b98754")
-			accent_color = Color("fff7de")
+			background_sprite.modulate = Color(1.0, 1.0, 1.0, 1.0)
 		TICK_SYSTEM.PHASE_EVENING:
-			sky_color = Color("d78f63")
-			floor_color = Color("9e6c4e")
-			accent_color = Color("ffd0a6")
+			background_sprite.modulate = Color(0.92, 0.80, 0.72, 1.0)
 		TICK_SYSTEM.PHASE_NIGHT:
-			sky_color = Color("34435d")
-			floor_color = Color("516072")
-			accent_color = Color("f7dd93")
+			background_sprite.modulate = Color(0.54, 0.60, 0.78, 0.98)
 
-	draw_rect(Rect2(Vector2.ZERO, viewport_size), sky_color, true)
-	draw_rect(Rect2(0, viewport_size.y * 0.72, viewport_size.x, viewport_size.y * 0.28), floor_color, true)
-	draw_rect(Rect2(64, 92, 220, 180), Color(1.0, 1.0, 1.0, 0.18), true)
-	draw_circle(Vector2(viewport_size.x - 140, 120), 32.0, accent_color)
-	draw_rect(Rect2(viewport_size.x - 280, 320, 180, 160), Color("7e5e4f"), true)
-	draw_rect(Rect2(96, 470, 180, 110), Color("d9c4a1"), true)
+func _draw() -> void:
+	var viewport_size := get_viewport_rect().size
+	var fallback_color := Color("f5dcae")
+	var phase_overlay := Color(1, 1, 1, 0.0)
+
+	match current_phase:
+		TICK_SYSTEM.PHASE_DAY:
+			fallback_color = Color("f5dcae")
+			phase_overlay = Color(1.0, 0.98, 0.9, 0.08)
+		TICK_SYSTEM.PHASE_EVENING:
+			fallback_color = Color("d78f63")
+			phase_overlay = Color(0.84, 0.58, 0.42, 0.16)
+		TICK_SYSTEM.PHASE_NIGHT:
+			fallback_color = Color("34435d")
+			phase_overlay = Color(0.10, 0.16, 0.30, 0.34)
+
+	if background_sprite == null or background_sprite.texture == null:
+		draw_rect(Rect2(Vector2.ZERO, viewport_size), fallback_color, true)
+
+	draw_rect(Rect2(Vector2.ZERO, viewport_size), phase_overlay, true)
 
 	if request_failed_flash:
 		draw_rect(Rect2(Vector2.ZERO, viewport_size), Color(1.0, 0.56, 0.56, 0.12), true)

@@ -16,6 +16,7 @@ const SLEEP_FRAMES := [2, 3, 4, 5]
 
 const BASE_SPRITE_POSITION := Vector2(0, -8)
 const BASE_SPRITE_SCALE := Vector2(3.2, 3.2)
+const MEOW_REPEAT_INTERVAL := 1.8
 
 @onready var sprite: Sprite2D = $Sprite
 @onready var meow_player: AudioStreamPlayer = $MeowPlayer
@@ -25,6 +26,7 @@ var mood: StringName = &"IDLE"
 var active_request_type: StringName = &""
 var sleep_result: StringName = &""
 var animation_time: float = 0.0
+var meow_cooldown: float = 0.0
 
 func _ready() -> void:
 	set_process(true)
@@ -33,6 +35,7 @@ func _ready() -> void:
 
 func _process(delta: float) -> void:
 	animation_time += delta
+	_update_meow_loop(delta)
 	_update_visuals()
 	queue_redraw()
 
@@ -43,6 +46,8 @@ func apply_state(state) -> void:
 	if current_phase == TICK_SYSTEM.PHASE_NIGHT:
 		mood = &"FURIOUS" if sleep_result == SLEEP_EVALUATOR.RESULT_DISTURBED_SLEEP else &"SLEEPING"
 	active_request_type = &"" if state.active_request == null else state.active_request["type"]
+	if active_request_type == &"":
+		meow_cooldown = 0.0
 	_update_visuals()
 	queue_redraw()
 
@@ -53,27 +58,35 @@ func on_phase_changed(_from_phase: StringName, to_phase: StringName) -> void:
 		sleep_result = &""
 	elif to_phase == TICK_SYSTEM.PHASE_NIGHT:
 		mood = &"SLEEPING"
+		meow_cooldown = 0.0
+		if meow_player != null and meow_player.playing:
+			meow_player.stop()
 	_update_visuals()
 	queue_redraw()
 
 func on_request_generated(request_type: StringName, _time_remaining: int) -> void:
 	active_request_type = request_type
 	mood = &"REQUESTING"
-	if meow_player != null:
-		meow_player.stop()
-		meow_player.play()
+	meow_cooldown = 0.0
+	_play_meow()
 	_update_visuals()
 	queue_redraw()
 
 func on_request_completed(_request_type: StringName) -> void:
 	active_request_type = &""
 	mood = &"SATISFIED"
+	meow_cooldown = 0.0
+	if meow_player != null and meow_player.playing:
+		meow_player.stop()
 	_update_visuals()
 	queue_redraw()
 
 func on_request_failed(_request_type: StringName) -> void:
 	active_request_type = &""
 	mood = &"UPSET"
+	meow_cooldown = 0.0
+	if meow_player != null and meow_player.playing:
+		meow_player.stop()
 	_update_visuals()
 	queue_redraw()
 
@@ -142,6 +155,21 @@ func _update_visuals() -> void:
 	sprite.rotation = rotation
 	sprite.modulate = sprite_modulate
 	sprite.flip_h = active_request_type == &"ATTENTION"
+
+func _update_meow_loop(delta: float) -> void:
+	if active_request_type == &"" or current_phase == TICK_SYSTEM.PHASE_NIGHT:
+		return
+
+	meow_cooldown -= delta
+	if meow_cooldown <= 0.0:
+		_play_meow()
+		meow_cooldown = MEOW_REPEAT_INTERVAL
+
+func _play_meow() -> void:
+	if meow_player == null:
+		return
+	meow_player.stop()
+	meow_player.play()
 
 func _draw() -> void:
 	var shadow_alpha := 0.16 if current_phase != TICK_SYSTEM.PHASE_NIGHT else 0.24

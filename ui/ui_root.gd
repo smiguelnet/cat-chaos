@@ -4,6 +4,9 @@ const HUD_SCRIPT = preload("res://ui/hud.gd")
 const REQUEST_PANEL_SCRIPT = preload("res://ui/request_panel.gd")
 const SLEEP_RESULT_PANEL_SCRIPT = preload("res://ui/sleep_result_panel.gd")
 const TICK_SYSTEM = preload("res://systems/tick_system.gd")
+const ACTION_PULSE_SPEED := 3.2
+const ACTION_PULSE_SCALE := 0.06
+const ACTION_PULSE_BRIGHTNESS := 0.10
 
 signal feed_requested
 signal pet_requested
@@ -19,10 +22,12 @@ var pet_button: Button
 var action_panel: PanelContainer
 var ambiance_top: ColorRect
 var ambiance_bottom: ColorRect
+var pulse_time: float = 0.0
 
 func _ready() -> void:
 	set_anchors_preset(Control.PRESET_FULL_RECT)
 	mouse_filter = Control.MOUSE_FILTER_PASS
+	set_process(true)
 
 	ambiance_top = ColorRect.new()
 	ambiance_top.set_anchors_preset(Control.PRESET_TOP_WIDE)
@@ -97,6 +102,11 @@ func _ready() -> void:
 	pet_button.pressed.connect(_on_pet_button_pressed)
 	button_box.add_child(pet_button)
 
+func _process(delta: float) -> void:
+	pulse_time += delta
+	_update_button_pulse(feed_button, _should_pulse_button(&"FOOD"))
+	_update_button_pulse(pet_button, _should_pulse_button(&"ATTENTION"))
+
 func apply_state(state) -> void:
 	current_state = state
 	hud.apply_state(state)
@@ -143,11 +153,13 @@ func on_sleep_evaluated(result: StringName, _state) -> void:
 func _on_feed_button_pressed() -> void:
 	if feed_button.disabled:
 		return
+	_reset_button_pulse(feed_button)
 	feed_requested.emit()
 
 func _on_pet_button_pressed() -> void:
 	if pet_button.disabled:
 		return
+	_reset_button_pulse(pet_button)
 	pet_requested.emit()
 
 func _update_buttons(phase: StringName) -> void:
@@ -156,6 +168,9 @@ func _update_buttons(phase: StringName) -> void:
 	pet_button.disabled = not enabled
 	_set_button_enabled_style(feed_button, enabled, Color(0.97, 0.69, 0.31), Color(0.41, 0.24, 0.13))
 	_set_button_enabled_style(pet_button, enabled, Color(0.96, 0.49, 0.60), Color(0.35, 0.14, 0.20))
+	if not enabled:
+		_reset_button_pulse(feed_button)
+		_reset_button_pulse(pet_button)
 
 func _update_ambiance(phase: StringName) -> void:
 	if phase == TICK_SYSTEM.PHASE_DAY:
@@ -172,6 +187,7 @@ func _create_action_button(text: String, fill: Color, text_color: Color) -> Butt
 	var button := Button.new()
 	button.text = text
 	button.custom_minimum_size = Vector2(147, 52)
+	button.pivot_offset = button.custom_minimum_size * 0.5
 	button.add_theme_font_size_override("font_size", 19)
 	button.add_theme_color_override("font_color", text_color)
 	button.add_theme_color_override("font_hover_color", text_color)
@@ -189,6 +205,39 @@ func _set_button_enabled_style(button: Button, enabled: bool, fill: Color, text_
 	else:
 		button.add_theme_color_override("font_color", Color(0.83, 0.84, 0.89))
 		button.add_theme_color_override("font_hover_color", Color(0.83, 0.84, 0.89))
+	_reset_button_pulse(button)
+
+func _update_button_pulse(button: Button, should_pulse: bool) -> void:
+	if button == null:
+		return
+	if button.disabled or not should_pulse:
+		_reset_button_pulse(button)
+		return
+
+	var pulse := (sin(pulse_time * TAU * 0.5 * ACTION_PULSE_SPEED) + 1.0) * 0.5
+	var scale_boost := 1.0 + ACTION_PULSE_SCALE * pulse
+	button.scale = Vector2(scale_boost, scale_boost)
+	button.modulate = Color(
+		1.0,
+		1.0,
+		1.0,
+		1.0
+	).lightened(ACTION_PULSE_BRIGHTNESS * pulse)
+
+func _should_pulse_button(request_type: StringName) -> bool:
+	if current_state == null:
+		return false
+	if current_state.phase != TICK_SYSTEM.PHASE_EVENING:
+		return false
+	if current_state.active_request == null:
+		return false
+	return current_state.active_request["type"] == request_type
+
+func _reset_button_pulse(button: Button) -> void:
+	if button == null:
+		return
+	button.scale = Vector2.ONE
+	button.modulate = Color.WHITE
 
 func _build_panel_style(bg: Color, border: Color, radius: int, width: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()
