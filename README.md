@@ -94,6 +94,40 @@ Once a preset is configured, you can export from the command line. For the sampl
 godot --headless --path . --export-release "Linux/X11" build/cat-chaos.x86_64
 ```
 
+### Export with Make
+
+This repository also includes a [`Makefile`](Makefile) to wrap the Godot export commands.
+
+First-time setup checklist:
+
+- Install `make`
+- Install `godot` and ensure it is available on your `PATH`
+- Install Godot export templates
+- Confirm the required export preset exists in `export_presets.cfg`
+
+From the repository root, the first export run is:
+
+```bash
+make
+```
+
+The default `all` target currently runs `clean` and `linux`, which exports the Linux build to `build/linux/`.
+
+Other useful targets:
+
+```bash
+make clean
+make linux
+make windows
+make web
+```
+
+If Godot is installed outside your shell `PATH`, pass it explicitly:
+
+```bash
+make GODOT=/full/path/to/godot
+```
+
 The design goal is clarity over content depth. Every action should have readable cause-and-effect, and the game should be small enough to implement cleanly in Godot.
 
 ## Core Gameplay Loop
