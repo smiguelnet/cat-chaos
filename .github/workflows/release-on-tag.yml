@@ -1,0 +1,72 @@
+name: Release On Tag
+
+on:
+  push:
+    tags:
+      - "*"
+
+permissions:
+  contents: write
+
+env:
+  GODOT_VERSION: 4.6.1-stable
+  GODOT_VERSION_DIR: 4.6.1.stable
+  GODOT_EDITOR_ARCHIVE: Godot_v4.6.1-stable_linux.x86_64.zip
+  GODOT_TEMPLATES_ARCHIVE: Godot_v4.6.1-stable_export_templates.tpz
+  GODOT_DOWNLOAD_BASE: https://github.com/godotengine/godot-builds/releases/download/4.6.1-stable
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install tooling
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip zip
+
+      - name: Download Godot editor and export templates
+        run: |
+          curl -L "$GODOT_DOWNLOAD_BASE/$GODOT_EDITOR_ARCHIVE" -o "$GODOT_EDITOR_ARCHIVE"
+          curl -L "$GODOT_DOWNLOAD_BASE/$GODOT_TEMPLATES_ARCHIVE" -o "$GODOT_TEMPLATES_ARCHIVE"
+
+      - name: Install Godot editor
+        run: |
+          unzip -q "$GODOT_EDITOR_ARCHIVE" -d "$RUNNER_TEMP/godot"
+          GODOT_BINARY="$(find "$RUNNER_TEMP/godot" -maxdepth 1 -type f -name 'Godot_v*linux*x86_64*' | head -n 1)"
+          chmod +x "$GODOT_BINARY"
+          mv "$GODOT_BINARY" "$RUNNER_TEMP/godot/godot"
+
+      - name: Install export templates
+        run: |
+          mkdir -p "$HOME/.local/share/godot/export_templates/$GODOT_VERSION_DIR"
+          unzip -q "$GODOT_TEMPLATES_ARCHIVE" -d "$RUNNER_TEMP/export-templates"
+          if [ -d "$RUNNER_TEMP/export-templates/templates" ]; then
+            cp -R "$RUNNER_TEMP/export-templates/templates/." "$HOME/.local/share/godot/export_templates/$GODOT_VERSION_DIR/"
+          else
+            cp -R "$RUNNER_TEMP/export-templates/." "$HOME/.local/share/godot/export_templates/$GODOT_VERSION_DIR/"
+          fi
+
+      - name: Import project assets
+        run: |
+          "$RUNNER_TEMP/godot/godot" --headless --import --path .
+
+      - name: Export Windows build
+        run: |
+          mkdir -p build/windows
+          "$RUNNER_TEMP/godot/godot" --headless --path . --export-release "Windows Desktop" build/windows/cat-chaos.exe
+
+      - name: Package release artifact
+        run: |
+          cd build/windows
+          zip -r "$RUNNER_TEMP/cat-chaos-windows-${GITHUB_REF_NAME}.zip" .
+
+      - name: Publish GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          files: |
+            ${{ runner.temp }}/cat-chaos-windows-${{ github.ref_name }}.zip
