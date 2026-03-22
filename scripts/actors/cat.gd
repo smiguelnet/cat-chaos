@@ -28,6 +28,8 @@ const SNORE_REPEAT_INTERVAL := 2.0
 var current_phase: StringName = TICK_SYSTEM.PHASE_DAY
 var mood: StringName = &"IDLE"
 var active_request_type: StringName = &""
+var active_request_time_remaining: int = 0
+var active_request_time_total: int = 0
 var sleep_result: StringName = &""
 var animation_time: float = 0.0
 var meow_cooldown: float = 0.0
@@ -56,9 +58,15 @@ func apply_state(state) -> void:
 	if current_phase == TICK_SYSTEM.PHASE_NIGHT:
 		mood = &"FURIOUS" if sleep_result == SLEEP_EVALUATOR.RESULT_DISTURBED_SLEEP else &"SLEEPING"
 	active_request_type = &"" if state.active_request == null else state.active_request["type"]
-	if active_request_type == &"":
+	if state.active_request == null:
+		active_request_time_remaining = 0
+		active_request_time_total = 0
 		meow_cooldown = 0.0
 		alert_cooldown = 0.0
+	else:
+		active_request_time_remaining = int(state.active_request["time_remaining"])
+		if active_request_time_total <= 0:
+			active_request_time_total = active_request_time_remaining
 	if not _should_play_snore():
 		snore_cooldown = 0.0
 	_update_visuals()
@@ -74,6 +82,8 @@ func on_phase_changed(_from_phase: StringName, to_phase: StringName) -> void:
 			snore_player.stop()
 	elif to_phase == TICK_SYSTEM.PHASE_NIGHT:
 		mood = &"SLEEPING"
+		active_request_time_remaining = 0
+		active_request_time_total = 0
 		meow_cooldown = 0.0
 		alert_cooldown = 0.0
 		snore_cooldown = 0.0
@@ -88,6 +98,8 @@ func on_phase_changed(_from_phase: StringName, to_phase: StringName) -> void:
 
 func on_request_generated(request_type: StringName, _time_remaining: int) -> void:
 	active_request_type = request_type
+	active_request_time_remaining = _time_remaining
+	active_request_time_total = _time_remaining
 	mood = &"REQUESTING"
 	meow_cooldown = 0.0
 	alert_cooldown = 0.0
@@ -98,6 +110,8 @@ func on_request_generated(request_type: StringName, _time_remaining: int) -> voi
 
 func on_request_completed(_request_type: StringName) -> void:
 	active_request_type = &""
+	active_request_time_remaining = 0
+	active_request_time_total = 0
 	mood = &"SATISFIED"
 	meow_cooldown = 0.0
 	alert_cooldown = 0.0
@@ -112,6 +126,8 @@ func on_request_completed(_request_type: StringName) -> void:
 
 func on_request_failed(_request_type: StringName) -> void:
 	active_request_type = &""
+	active_request_time_remaining = 0
+	active_request_time_total = 0
 	mood = &"UPSET"
 	meow_cooldown = 0.0
 	alert_cooldown = 0.0
@@ -178,6 +194,11 @@ func _update_visuals() -> void:
 		sprite_modulate = sprite_modulate.darkened(0.06)
 	elif current_phase == TICK_SYSTEM.PHASE_NIGHT and mood != &"SLEEPING":
 		sprite_modulate = sprite_modulate.darkened(0.18)
+
+	if active_request_type != &"" and active_request_time_total > 0:
+		var urgency := 1.0 - (float(active_request_time_remaining) / float(active_request_time_total))
+		var red_tint_strength := 0.18 + urgency * 0.28
+		sprite_modulate = sprite_modulate.lerp(Color(1.0, 0.58, 0.58, 1.0), red_tint_strength)
 
 	var frame_index := int(animation_time * fps) % frames.size()
 	var atlas_frame: int = frames[frame_index]
