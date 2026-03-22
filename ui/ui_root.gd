@@ -3,6 +3,7 @@ extends Control
 const HUD_SCRIPT = preload("res://ui/hud.gd")
 const REQUEST_PANEL_SCRIPT = preload("res://ui/request_panel.gd")
 const SLEEP_RESULT_PANEL_SCRIPT = preload("res://ui/sleep_result_panel.gd")
+const TITLE_FONT = preload("res://assets/ui/fonts/holiday-notes.otf")
 const TICK_SYSTEM = preload("res://systems/tick_system.gd")
 const ACTION_PULSE_SPEED := 3.2
 const ACTION_PULSE_SCALE := 0.06
@@ -85,6 +86,7 @@ func _ready() -> void:
 
 	var action_title := Label.new()
 	action_title.text = "CARE ACTIONS"
+	action_title.add_theme_font_override("font", TITLE_FONT)
 	action_title.add_theme_font_size_override("font_size", 14)
 	action_title.modulate = Color(0.98, 0.91, 0.78)
 	action_content.add_child(action_title)

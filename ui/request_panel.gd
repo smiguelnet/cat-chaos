@@ -1,6 +1,7 @@
 extends PanelContainer
 class_name CatChaosRequestPanel
 
+const TITLE_FONT = preload("res://assets/ui/fonts/holiday-notes.otf")
 const PANEL_BG := Color(0.17, 0.11, 0.16, 0.92)
 const PANEL_BORDER := Color(1.00, 0.77, 0.53, 0.72)
 const FOOD_COLOR := Color(0.97, 0.69, 0.31)
@@ -30,11 +31,13 @@ func _ready() -> void:
 
 	header_label = Label.new()
 	header_label.text = "CAT REQUEST"
+	header_label.add_theme_font_override("font", TITLE_FONT)
 	header_label.add_theme_font_size_override("font_size", 13)
 	header_label.modulate = Color(1.0, 0.88, 0.72)
 	content.add_child(header_label)
 
 	title_label = Label.new()
+	title_label.add_theme_font_override("font", TITLE_FONT)
 	title_label.add_theme_font_size_override("font_size", 26)
 	title_label.modulate = Color(0.99, 0.97, 0.93)
 	content.add_child(title_label)

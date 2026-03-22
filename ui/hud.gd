@@ -1,6 +1,7 @@
 extends PanelContainer
 class_name CatChaosHud
 
+const TITLE_FONT = preload("res://assets/ui/fonts/holiday-notes.otf")
 const PANEL_BG := Color(0.10, 0.10, 0.16, 0.84)
 const PANEL_BORDER := Color(0.99, 0.90, 0.74, 0.52)
 const HEADER_BG := Color(0.96, 0.78, 0.49, 0.18)
@@ -48,6 +49,7 @@ func _ready() -> void:
 	header_margin.add_child(header_row)
 
 	phase_label = _make_chip_label(21, TEXT_MAIN)
+	phase_label.add_theme_font_override("font", TITLE_FONT)
 	phase_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	header_row.add_child(phase_label)
 
@@ -110,6 +112,7 @@ func _make_stat_card(title: String, subtitle: String, accent: Color, bar_name: S
 
 	var title_label := Label.new()
 	title_label.text = title
+	title_label.add_theme_font_override("font", TITLE_FONT)
 	title_label.add_theme_font_size_override("font_size", 18)
 	title_label.modulate = TEXT_MAIN
 	top_row.add_child(title_label)

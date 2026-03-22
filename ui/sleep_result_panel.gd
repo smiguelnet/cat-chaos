@@ -1,6 +1,7 @@
 extends PanelContainer
 class_name CatChaosSleepResultPanel
 
+const TITLE_FONT = preload("res://assets/ui/fonts/holiday-notes.otf")
 const SLEEP_EVALUATOR = preload("res://systems/sleep_evaluator.gd")
 
 var title_label: Label
@@ -24,11 +25,13 @@ func _ready() -> void:
 
 	title_label = Label.new()
 	title_label.text = "BEDTIME RESULT"
+	title_label.add_theme_font_override("font", TITLE_FONT)
 	title_label.add_theme_font_size_override("font_size", 13)
 	title_label.modulate = Color(0.84, 0.88, 0.98)
 	content.add_child(title_label)
 
 	result_label = Label.new()
+	result_label.add_theme_font_override("font", TITLE_FONT)
 	result_label.add_theme_font_size_override("font_size", 28)
 	content.add_child(result_label)
 
