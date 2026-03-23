@@ -97,8 +97,8 @@ func _request_heading(request_type: StringName) -> String:
 
 func _request_description(request_type: StringName) -> String:
 	if request_type == &"FOOD":
-		return "Serve food before the timer expires."
-	return "Pet the cat before the mood drops."
+		return "Click the food bag before the timer expires."
+	return "Click the care icon before the mood drops."
 
 func _request_color(request_type: StringName) -> Color:
 	if request_type == &"FOOD":
